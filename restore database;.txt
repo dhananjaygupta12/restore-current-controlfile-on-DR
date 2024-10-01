@@ -1,0 +1,203 @@
+restore database
+
+SQL>  select name from v$controlfile;
+
+NAME
+--------------------------------------------------------------------------------
+/u01/app/oracle/oradata/PRIMARY/control01.ctl
+/u01/app/oracle/fast_recovery_area/PRIMARY/control02.ctl
+
+SQL>  select name from v$datafile;
+
+NAME
+--------------------------------------------------------------------------------
+/u01/app/oracle/oradata/PRIMARY/system01.dbf
+/u01/app/oracle/oradata/PRIMARY/sysaux01.dbf
+/u01/app/oracle/oradata/PRIMARY/undotbs01.dbf
+/u01/app/oracle/oradata/PRIMARY/users01.dbf
+
+SQL> shut imeediate;
+SP2-0717: illegal SHUTDOWN option
+SQL> shut immediate;
+Database closed.
+Database dismounted.
+ORACLE instance shut down.
+
+
+[oracle@primary ~]$ cd /u01/app/oracle/oradata/PRIMARY/
+[oracle@primary PRIMARY]$ ll
+total 2602160
+-rw-r-----. 1 oracle oinstall  10600448 Jul 30 08:05 control01.ctl
+-rw-r-----. 1 oracle oinstall 209715712 Jul 30 07:57 redo01.log
+-rw-r-----. 1 oracle oinstall 209715712 Jul 30 07:57 redo02.log
+-rw-r-----. 1 oracle oinstall 209715712 Jul 30 08:05 redo03.log
+-rw-r-----. 1 oracle oinstall  52429312 Jul 30 07:54 redo04.log
+-rw-r-----. 1 oracle oinstall  52429312 Jul 30 07:54 redo05.log
+-rw-r-----. 1 oracle oinstall  52429312 Jul 30 07:54 redo06.log
+-rw-r-----. 1 oracle oinstall 566239232 Jul 30 08:05 sysaux01.dbf
+-rw-r-----. 1 oracle oinstall 933240832 Jul 30 08:05 system01.dbf
+-rw-r-----. 1 oracle oinstall  20979712 Jul 30 07:55 temp01.dbf
+-rw-r-----. 1 oracle oinstall 361766912 Jul 30 08:05 undotbs01.dbf
+-rw-r-----. 1 oracle oinstall   5251072 Jul 30 08:05 users01.dbf
+[oracle@primary PRIMARY]$ rm -rf *
+[oracle@primary PRIMARY]$ cd /u01/app/oracle/fast_recovery_area/PRIMARY/
+[oracle@primary PRIMARY]$ ll
+total 10352
+drwxr-x---. 3 oracle oinstall       24 Jul 30 07:44 archivelog
+drwxr-x---. 3 oracle oinstall       24 Jul 30 07:54 autobackup
+-rw-r-----. 1 oracle oinstall 10600448 Jul 30 08:05 control02.ctl
+drwxr-x---. 2 oracle oinstall        6 Jul 30 07:54 onlinelog
+[oracle@primary PRIMARY]$ rm -rf *
+[oracle@primary PRIMARY]$ cd /u01/app/oracle/oradata/PRIMARY
+[oracle@primary PRIMARY]$ ll
+total 0
+
+
+[oracle@primary PRIMARY]$ sqlplus / as sysdba
+
+SQL*Plus: Release 19.0.0.0.0 - Production on Tue Jul 30 08:08:09 2024
+Version 19.3.0.0.0
+
+Copyright (c) 1982, 2019, Oracle.  All rights reserved.
+
+Connected to an idle instance.
+
+SQL> startup nomount;
+ORACLE instance started.
+
+Total System Global Area 1543500144 bytes
+Fixed Size                  8896880 bytes
+Variable Size             905969664 bytes
+Database Buffers          620756992 bytes
+Redo Buffers                7876608 bytes
+SQL> exit
+Disconnected from Oracle Database 19c Enterprise Edition Release 19.0.0.0.0 - Production
+Version 19.3.0.0.0
+[oracle@primary PRIMARY]$ rman target /
+
+Recovery Manager: Release 19.0.0.0.0 - Production on Tue Jul 30 08:08:43 2024
+Version 19.3.0.0.0
+
+Copyright (c) 1982, 2019, Oracle and/or its affiliates.  All rights reserved.
+
+connected to target database: PRIMARY (not mounted)
+
+
+RMAN> restore controlfile from '/u01/rman/Controlfile_20240730_0f316leq_1_1';
+
+Starting restore at 30-JUL-24
+using channel ORA_DISK_1
+
+channel ORA_DISK_1: restoring control file
+channel ORA_DISK_1: restore complete, elapsed time: 00:00:01
+output file name=/u01/app/oracle/oradata/PRIMARY/control01.ctl
+output file name=/u01/app/oracle/fast_recovery_area/PRIMARY/control02.ctl
+Finished restore at 30-JUL-24
+
+
+RMAN> sql 'alter database mount';
+
+sql statement: alter database mount
+released channel: ORA_DISK_1
+
+
+RMAN> catalog start with '/u01/rman';
+
+Starting implicit crosscheck backup at 30-JUL-24
+allocated channel: ORA_DISK_1
+channel ORA_DISK_1: SID=24 device type=DISK
+Crosschecked 14 objects
+Finished implicit crosscheck backup at 30-JUL-24
+
+Starting implicit crosscheck copy at 30-JUL-24
+using channel ORA_DISK_1
+Finished implicit crosscheck copy at 30-JUL-24
+
+searching for all files in the recovery area
+cataloging files...
+no files cataloged
+
+searching for all files that match the pattern /u01/rman
+
+List of Files Unknown to the Database
+=====================================
+File Name: /u01/rman/Controlfile_20240730_0f316leq_1_1
+
+Do you really want to catalog the above files (enter YES or NO)? yes
+cataloging files...
+cataloging done
+
+List of Cataloged Files
+=======================
+File Name: /u01/rman/Controlfile_20240730_0f316leq_1_1
+
+
+RMAN> restore database;
+
+Starting restore at 30-JUL-24
+using channel ORA_DISK_1
+
+channel ORA_DISK_1: starting datafile backup set restore
+channel ORA_DISK_1: specifying datafile(s) to restore from backup set
+channel ORA_DISK_1: restoring datafile 00001 to /u01/app/oracle/oradata/PRIMARY/system01.dbf
+channel ORA_DISK_1: restoring datafile 00003 to /u01/app/oracle/oradata/PRIMARY/sysaux01.dbf
+channel ORA_DISK_1: restoring datafile 00004 to /u01/app/oracle/oradata/PRIMARY/undotbs01.dbf
+channel ORA_DISK_1: restoring datafile 00007 to /u01/app/oracle/oradata/PRIMARY/users01.dbf
+channel ORA_DISK_1: reading from backup piece /u01/rman/Fullbackup_20240730_0d316lb5_1_1
+channel ORA_DISK_1: piece handle=/u01/rman/Fullbackup_20240730_0d316lb5_1_1 tag=TAG20240730T073605
+channel ORA_DISK_1: restored backup piece 1
+channel ORA_DISK_1: restore complete, elapsed time: 00:01:15
+Finished restore at 30-JUL-24
+
+SQL> startup mount;
+ORACLE instance started.
+
+Total System Global Area 1543500144 bytes
+Fixed Size                  8896880 bytes
+Variable Size             905969664 bytes
+Database Buffers          620756992 bytes
+Redo Buffers                7876608 bytes
+Database mounted.
+SQL> exit
+Disconnected from Oracle Database 19c Enterprise Edition Release 19.0.0.0.0 - Production
+Version 19.3.0.0.0
+[oracle@primary PRIMARY]$ rman target /
+
+Recovery Manager: Release 19.0.0.0.0 - Production on Tue Jul 30 08:17:52 2024
+Version 19.3.0.0.0
+
+Copyright (c) 1982, 2019, Oracle and/or its affiliates.  All rights reserved.
+
+connected to target database: PRIMARY (DBID=2013072110, not open)
+
+RMAN> recover database;
+
+Starting recover at 30-JUL-24
+using target database control file instead of recovery catalog
+allocated channel: ORA_DISK_1
+channel ORA_DISK_1: SID=253 device type=DISK
+
+starting media recovery
+
+channel ORA_DISK_1: starting archived log restore to default destination
+channel ORA_DISK_1: restoring archived log
+archived log thread=1 sequence=17
+channel ORA_DISK_1: reading from backup piece /u01/rman/Archive_20240730_0e316lep_1_1
+channel ORA_DISK_1: piece handle=/u01/rman/Archive_20240730_0e316lep_1_1 tag=TAG20240730T073801
+channel ORA_DISK_1: restored backup piece 1
+channel ORA_DISK_1: restore complete, elapsed time: 00:00:01
+archived log file name=/u01/app/oracle/fast_recovery_area/PRIMARY/archivelog/2024_07_30/o1_mf_1_17_mbkphx6h_.arc thread=1 sequence=17
+channel default: deleting archived log(s)
+archived log file name=/u01/app/oracle/fast_recovery_area/PRIMARY/archivelog/2024_07_30/o1_mf_1_17_mbkphx6h_.arc RECID=14 STAMP=1175674685
+unable to find archived log
+archived log thread=1 sequence=18
+RMAN-00571: ===========================================================
+RMAN-00569: =============== ERROR MESSAGE STACK FOLLOWS ===============
+RMAN-00571: ===========================================================
+RMAN-03002: failure of recover command at 07/30/2024 08:18:07
+RMAN-06054: media recovery requesting unknown archived log for thread 1 with sequence 18 and starting SCN of 2761071
+
+RMAN> alter database open resetlogs;
+
+Statement processed
+
